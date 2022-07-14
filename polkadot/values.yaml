@@ -47,7 +47,7 @@ readinessProbe:
 
 prometheus:
   operator:
-    enabled: true
+    enabled: false
 
 grafana:
   service:
