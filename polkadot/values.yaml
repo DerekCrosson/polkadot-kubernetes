@@ -44,3 +44,13 @@ readinessProbe:
   timeoutSeconds: 5 
   successThreshold: 1
   failureThreshold: 3
+
+prometheus:
+  operator:
+    enabled: true
+
+grafana:
+  service:
+    type: NodePort
+    nodePort: 31472
+    portName: grafana-np
