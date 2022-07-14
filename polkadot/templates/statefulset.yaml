@@ -1,0 +1,85 @@
+# This will create stateful set for deploying polkadot node as pod
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    app: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  serviceName: {{ .Release.Name }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Release.Name }}
+    spec:
+    # Init container will download latest snapshot (kusama in this case), this url can be customized and passed at the time of deployment
+      initContainers:
+        - name: {{ .Chart.Name }}-init
+          args:
+            - /bin/sh
+            - -c
+            - |
+              if [ -d /polkadot/.local/share/polkadot/chains/ksmcc3 ]; then
+                echo "Database already exists"
+              else
+                mkdir -p /polkadot/.local/share/polkadot/chains/ksmcc3
+                curl -o - -L https://ksm-rocksdb.polkashots.io/snapshot | lz4 -c -d - | tar -x -C /polkadot/.local/share/polkadot/chains/ksmcc3      
+              fi
+image: ankjnn/lz4:latest    #This image contains utilities such as 'curl', 'lz4', 'tar' etc.
+          volumeMounts:
+          - name: database
+            mountPath: /polkadot
+    # This will run polkadot container
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+          - --name
+          - {{ .Values.node.name }}
+          - --chain
+          - {{ .Values.node.chain }}
+          - --prometheus-external
+          ports:
+            - name: polkadot
+              containerPort: 9615
+          volumeMounts:
+          - name: database
+            mountPath: /polkadot
+          {{ if .Values.livenessProbe.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.livenessProbe.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.livenessProbe.successThreshold }}
+            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+          {{ end }}
+          {{ if .Values.readinessProbe.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.readinessProbe.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.readinessProbe.successThreshold }}
+            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+          {{ end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+# This will create persistent volume and claim dynamically using default storage class (gp2 in aws ebs case)
+  volumeClaimTemplates:
+  - metadata:
+      name: database
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 140Gi
