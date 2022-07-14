@@ -29,7 +29,7 @@ spec:
                 mkdir -p /polkadot/.local/share/polkadot/chains/ksmcc3
                 curl -o - -L https://ksm-rocksdb.polkashots.io/snapshot | lz4 -c -d - | tar -x -C /polkadot/.local/share/polkadot/chains/ksmcc3      
               fi
-image: ankjnn/lz4:latest    #This image contains utilities such as 'curl', 'lz4', 'tar' etc.
+          image: ankjnn/lz4:latest    #This image contains utilities such as 'curl', 'lz4', 'tar' etc.
           volumeMounts:
           - name: database
             mountPath: /polkadot
