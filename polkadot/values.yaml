@@ -2,7 +2,7 @@ replicaCount: 1
 image:
   repository: "parity/polkadot"
   tag: latest
-  pullPolicy: Always
+  pullPolicy: IfNotPresent
 
 nameOverride: ""
 fullnameOverride: ""
@@ -15,12 +15,12 @@ service:
 
 node:
   name: ""
-  chain: "kusama"
+  chain: "polkadot"
 
 resources: 
   limits:
-    cpu: 1500m
-    memory: 4000Mi
+    cpu: 2000m
+    memory: 3000Mi
   requests:
     cpu: 100m
     memory: 110Mi
@@ -47,10 +47,10 @@ readinessProbe:
 
 prometheus:
   operator:
-    enabled: false
+    enabled: true
 
-grafana:
-  service:
-    type: NodePort
-    nodePort: 31472
-    portName: grafana-np
+# grafana:
+#   service:
+#     type: NodePort
+#     nodePort: 31472
+#     portName: grafana-np

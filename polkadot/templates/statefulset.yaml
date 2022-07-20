@@ -16,23 +16,24 @@ spec:
       labels:
         app.kubernetes.io/name: {{ .Release.Name }}
     spec:
-    # Init container will download latest snapshot (kusama in this case), this url can be customized and passed at the time of deployment
-      initContainers:
-        - name: {{ .Chart.Name }}-init
-          args:
-            - /bin/sh
-            - -c
-            - |
-              if [ -d /polkadot/.local/share/polkadot/chains/ksmcc3 ]; then
-                echo "Database already exists"
-              else
-                mkdir -p /polkadot/.local/share/polkadot/chains/ksmcc3
-                curl -o - -L https://ksm-rocksdb.polkashots.io/snapshot | lz4 -c -d - | tar -x -C /polkadot/.local/share/polkadot/chains/ksmcc3      
-              fi
-          image: ankjnn/lz4:latest    #This image contains utilities such as 'curl', 'lz4', 'tar' etc.
-          volumeMounts:
-          - name: database
-            mountPath: /polkadot
+    # Init container will download latest snapshot (polkadot in this case), this url can be customized and passed at the time of deployment
+      # initContainers:
+      #   - name: {{ .Chart.Name }}-init
+      #     args:
+      #       - /bin/sh
+      #       - -c
+      #       - |
+      #         if [ -d /polkadot/.local/share/polkadot/chains/polkadot ]; then
+      #           echo "Database already exists"
+      #         else
+      #           mkdir -p /polkadot/.local/share/polkadot/chains/polkadot
+      #           curl -o - -L https://dot-rocksdb.polkashots.io/snapshot | lz4 -c -d - | tar -x -C /polkadot/.local/share/polkadot/chains/polkadot
+      #         fi
+      #     image: busybox:latest
+      #     imagePullPolicy: IfNotPresent
+      #     volumeMounts:
+      #     - name: database
+      #       mountPath: /polkadot
     # This will run polkadot container
       containers:
         - name: {{ .Chart.Name }}
@@ -82,4 +83,4 @@ spec:
       accessModes: [ "ReadWriteOnce" ]
       resources:
         requests:
-          storage: 140Gi
+          storage: 20Gi
